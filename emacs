@@ -11,8 +11,8 @@
 				   nil)))
 
 ;;; Customize the load path for my own functions.
-(setq load-path (append '( "/usr/share/maxima/5.27.0/emacs"
-			  "~/gnu" "~/gnu/egg" "~/gnu/imaxima-imath-1.0"
+(setq load-path (append '( ;"/usr/share/maxima/5.27.0/emacs"
+			  "~/gnu" ;"~/gnu/egg" ;"~/gnu/imaxima-imath-1.0"
 			  "~/gnu/glsl-mode")
 			load-path))
 
@@ -30,6 +30,7 @@
 (require 'uniquify)
 (setq uniquify-buffer-name-style 'post-forward)
 
+(global-set-key (kbd "C-x C-b") (lambda () (interactive) (ibuffer t)))
 (require 'compile)
 ;;; From the emacs wiki
 (global-set-key [(control c) (m)] 'compile-again)
@@ -50,13 +51,23 @@ M-x compile.
 
 ;;; My preferred mode for Git
 
-(with-demoted-errors
-  (require 'egg)
-  (load-library "egg-grep"))
+;(with-demoted-errors
+;  ;(require 'egg)
+;  (load-library "egg-grep")
+;  (delete 'Git vc-handled-backends)
+;  (remove-hook 'find-file-hooks 'vc-find-file-hook)
+;  )
 
 (with-demoted-errors
   (require 'gtags))
 
+(with-demoted-errors
+  (require 'cmake-mode)
+  (setq auto-mode-alist
+        (append
+         '(("CMakeLists\\.txt\\'" . cmake-mode)
+           ("\\.cmake\\'" . cmake-mode))
+         auto-mode-alist)))
 ;;; C and C++
 
 ;;; .h files are likely to be c++
@@ -65,17 +76,51 @@ M-x compile.
 ;;; We hates it!
 (setq parens-require-spaces nil)
 
+;;; From http://emacswiki.org/emacs/EmacsTags
+
+(require 'cl)
+
+(defun find-file-upwards (file-to-find)
+  "Recursively searches each parent directory starting from the default-directory.
+looking for a file with name file-to-find.  Returns the path to it
+or nil if not found."
+  (labels
+      ((find-file-r (path)
+                    (let* ((parent (file-name-directory path))
+                           (possible-file (concat parent file-to-find)))
+                      (cond
+                       ((file-exists-p possible-file) possible-file) ; Found
+                       ;; The parent of ~ is nil and the parent of / is itself.
+                       ;; Thus the terminating condition for not finding the file
+                       ;; accounts for both.
+                       ((or (null parent) (equal parent (directory-file-name parent))) nil) ; Not found
+                       (t (find-file-r (directory-file-name parent))))))) ; Continue
+    (find-file-r default-directory)))
+
 (add-hook 'c-mode-common-hook
 	  (lambda ()
 	    (auto-fill-mode 1)
 	    (local-set-key "\r" 'newline-and-indent)
 	    (if (memq 'gtags features)
-		(gtags-mode t))))
+		(gtags-mode t))
+            ;; Inventor stuff
+            (let ((oiv-include (find-file-upwards "OIVHOME/include")))
+              (when oiv-include
+                (let ((new-ff-directories (cons oiv-include
+                                                cc-search-directories))
+                      (local-include (find-file-upwards "include")))
+                  (when (and local-include
+                             (not (string= local-include oiv-include)))
+                    (push local-include new-ff-directories))
+                  (setq ff-search-directories new-ff-directories))))))
+
+(global-set-key [(control c) (control f)] 'ff-find-other-file)
 
 ;;; This makes much more sense and agrees better with tools like git diff.
 (setq c-offsets-alist '((namespace-open . 0)
                         (namespace-close . 0)
-                        (innamespace . 0)))
+                        (innamespace . 0)
+                        (inextern-lang . 0)))
 
 ;;; Stroustrup, with the namespace changes above and different inline open
 
@@ -93,9 +138,24 @@ M-x compile.
              '("linux"
                (indent-tabs-mode t)))
 
+(c-add-style "inventor"
+             '("PERSONAL-C++"
+               (c-basic-offset . 2)))
+
+(setq my-c++-styles-alist
+      '(("OIVHOME" . "inventor")
+        (nil . "PERSONAL-C++")))
+
 (add-hook 'c++-mode-hook
 	  (lambda ()
-	    (c-set-style "PERSONAL-C++" 'dont-override)))
+            (let ((style
+                   (assoc-default buffer-file-name my-c++-styles-alist
+                                  (lambda (file path)
+                                    (or (not file)
+                                        (find-file-upwards file))))))
+              (cond ((stringp style)
+                     (c-set-style style 'dont-override))
+                    (t nil)))))
 
 (setq add-log-mailing-address "timoore33@gmail.com")
 
@@ -105,6 +165,34 @@ M-x compile.
 
 (with-demoted-errors
   (require 'glsl-mode))
+
+(defvar git-grep-history nil "History list for git-grep.")
+
+(defun git-grep (args)
+  "Run git grep."
+  (interactive
+   (progn
+     (grep-compute-defaults)
+     (let ((default (grep-default-command)))
+       (list (read-shell-command "Run git grep (like this): "
+                                 (if current-prefix-arg default
+                                   "git --no-pager grep -n ")
+                                 'git-grep-history
+                                 (if current-prefix-arg nil default))))))
+  (grep args))
+
+(defun git-gra (args)
+  "Run git gra."
+  (interactive
+   (progn
+     (grep-compute-defaults)
+     (let ((default (grep-default-command)))
+       (list (read-shell-command "Run git gra (like this): "
+                                 (if current-prefix-arg default
+                                   "git --no-pager gra ")
+                                 'git-grep-history
+                                 (if current-prefix-arg nil default))))))
+  (grep args))
 
 ;;; Common Lisp and Emacs Lisp
 
@@ -129,8 +217,8 @@ M-x compile.
 (setq common-lisp-hyperspec-symbol-table
       "/home/moore/lisp/HyperSpec/Data/Map_Sym.txt")
 
-(with-demoted-errors
-  (require 'slime))
+;(with-demoted-errors
+;  (require 'slime))
 ;(slime-setup '(slime-repl))
 
 (defun restore-slime-translations ()
@@ -237,8 +325,8 @@ M-x compile.
 
 
 ;;; AucTeX
-(with-demoted-errors
-  (require 'tex-site))
+;(with-demoted-errors
+;  (require 'tex-site))
 
 (setq TeX-auto-save t)
 (setq TeX-parse-self t)
@@ -334,12 +422,15 @@ M-x compile.
 (define-key esc-map "S" 'spell-buffer)
 (define-key global-map "\^cw" 'copy-sexp-as-kill)
 
+(global-set-key [(control c) (g) (s)] 'magit-status)
+(global-set-key [(control c) (g) (b)] 'magit-blame-mode)
+
 ;;; map \^h to delete
 (setq keyboard-translate-table "\0\1\2\3\4\5\6\7\177")
 (define-key global-map "\M-?" 'help-command)
 (define-key global-map "\M-?a" 'apropos)
 
-(setq grep-files-aliases (cons '("j" . "*.java") grep-files-aliases))
+;(setq grep-files-aliases (cons '("j" . "*.java") grep-files-aliases))
 
 ;;; The scheme program
 (defvar scheme-program-name "guile")
@@ -482,17 +573,42 @@ this is meant to be called with
            (org-remember-finalize)
            (when remember-frame-p (delete-frame)))))))
 
+;; 'djcb-org-article' for export org documents to the LaTex 'article', using
+;; XeTeX and some fancy fonts; requires XeTeX (see org-latex-to-pdf-process)
+(require 'org-latex)
+(add-to-list
+ 'org-export-latex-classes
+ '("djcb-org-article" "\\documentclass[11pt,a4paper]{article}
+\\usepackage{fontspec}
+\\usepackage{graphicx}
+\\usepackage{hyperref}
+\\defaultfontfeatures{Mapping=tex-text}
+\\setromanfont[BoldFont={Gentium Basic Bold}]{Gentium}
+\\setsansfont{Charis SIL}
+\\setmonofont[Scale=0.8]{DejaVu Sans Mono}
+\\usepackage{geometry}
+\\geometry{a4paper, textwidth=6.5in, textheight=10in,
+            marginparsep=7pt, marginparwidth=.6in}
+\\pagestyle{empty}
+\\title{}
+      [NO-DEFAULT-PACKAGES]
+      [NO-PACKAGES]" ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}") ("\\paragraph{%s}" . "\\paragraph*{%s}") ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+
+(setq org-latex-to-pdf-process 
+  '("xelatex -interaction nonstopmode %f"
+     "xelatex -interaction nonstopmode %f")) ;; for multiple passes
+;;; fonts
+;;(add-to-list 'default-frame-alist '(font "Inconsolata-12"))
+
 (custom-set-variables
-  ;; custom-set-variables was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  '(ansi-color-names-vector ["#242424" "#e5786d" "#95e454" "#cae682" "#8ac6f2" "#333366" "#ccaa8f" "#f6f3e8"])
  '(custom-enabled-themes (quote (whiteboard)))
  '(custom-safe-themes (quote ("60a65134827577812cab9974a7c368f8ad15746fb032ea4a39d0768eafb9e6e2" default)))
- '(safe-local-variable-values (quote ((eval progn (c-set-offset (quote innamespace) (quote 0)) (c-set-offset (quote inline-open) (quote 0))))))
  '(ecb-options-version "2.40")
- '(egg-enable-tooltip t)
  '(org-agenda-files (quote ("~/solo/ideas.org" "~/solo/brico.org" "~/organizer.org")))
  '(org-agenda-ndays 7)
  '(org-agenda-repeating-timestamp-show-all nil)
@@ -521,14 +637,12 @@ this is meant to be called with
  '(org-refile-targets (quote (("organizer.org" :maxlevel . 1) ("someday.org" :level . 2))))
  '(org-reverse-note-order nil)
  '(org-tags-column -78)
- '(org-tags-match-list-sublevels nil)
  '(org-use-fast-todo-selection t)
- '(org-use-tag-inheritance nil)
  '(safe-local-variable-values (quote ((eval progn (c-set-offset (quote innamespace) (quote 0)) (c-set-offset (quote inline-open) (quote 0))) (package . user) (Package . JAPANESE-GRAPHICS-EDITOR) (TeX-master . "these") (Package . USER) (TeX-master . t) (Package . GOATEE) (Package . TOOL) (Package . ACL-CLIM) (Syntax . ANSI-Common-lisp) (Package . CLIM-DEFSYSTEM) (Package . CLIM-UTILS) (package . tk) \.\.\.)))
  '(tool-bar-mode nil))
 (custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- )
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(default ((t (:family "Inconsolata" :foundry "unknown" :slant normal :weight normal :height 123 :width normal)))))
