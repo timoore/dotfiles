@@ -424,6 +424,9 @@ or nil if not found."
 
 (global-set-key [(control c) (g) (s)] 'magit-status)
 (global-set-key [(control c) (g) (b)] 'magit-blame-mode)
+(global-set-key [(control c) (g) (a)] 'git-gra)
+(global-set-key [(control c) (g) (g)] 'git-grep)
+
 
 ;;; map \^h to delete
 (setq keyboard-translate-table "\0\1\2\3\4\5\6\7\177")
