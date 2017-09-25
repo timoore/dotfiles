@@ -221,6 +221,10 @@ or nil if not found."
 ;  (require 'slime))
 ;(slime-setup '(slime-repl))
 
+(if (file-exists-p "~/quicklisp/slime-helper.el")
+    (progn
+      (load "~/quicklisp/slime-helper.el")))
+
 (defun restore-slime-translations ()
   (setq slime-translate-from-lisp-filename-function
 	'identity)
@@ -641,11 +645,12 @@ this is meant to be called with
  '(org-reverse-note-order nil)
  '(org-tags-column -78)
  '(org-use-fast-todo-selection t)
- '(safe-local-variable-values (quote ((eval progn (c-set-offset (quote innamespace) (quote 0)) (c-set-offset (quote inline-open) (quote 0))) (package . user) (Package . JAPANESE-GRAPHICS-EDITOR) (TeX-master . "these") (Package . USER) (TeX-master . t) (Package . GOATEE) (Package . TOOL) (Package . ACL-CLIM) (Syntax . ANSI-Common-lisp) (Package . CLIM-DEFSYSTEM) (Package . CLIM-UTILS) (package . tk) \.\.\.)))
+ '(safe-local-variable-values (quote ((Base . 10) (Syntax . ANSI-Common-Lisp) (eval progn (c-set-offset (quote innamespace) (quote 0)) (c-set-offset (quote inline-open) (quote 0))) (package . user) (Package . JAPANESE-GRAPHICS-EDITOR) (TeX-master . "these") (Package . USER) (TeX-master . t) (Package . GOATEE) (Package . TOOL) (Package . ACL-CLIM) (Syntax . ANSI-Common-lisp) (Package . CLIM-DEFSYSTEM) (Package . CLIM-UTILS) (package . tk) \.\.\.)))
  '(tool-bar-mode nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:family "Inconsolata" :foundry "unknown" :slant normal :weight normal :height 123 :width normal)))))
+ '(default ((t (:family "Inconsolata" :foundry "unknown" :slant normal :weight normal :height 123 :width normal))))
+ '(magit-item-highlight ((t nil))))
