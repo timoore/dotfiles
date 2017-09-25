@@ -1,6 +1,5 @@
 [user]
-	email = Tim.Moore@fei.com
-	name = 
+	name = Tim Moore
 [merge]
 	conflictstyle = diff3
 [color]
