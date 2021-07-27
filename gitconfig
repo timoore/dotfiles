@@ -1,6 +1,3 @@
-[user]
-	email = Tim.Moore@fei.com
-	name = 
 [merge]
 	conflictstyle = diff3
 [color]
@@ -19,5 +16,3 @@
         graph2 = "!f() { echo 'digraph git { edge [dir=none]' ; git log --pretty='format:  \"%h\" [label=\"%s\"]' \"$@\"; git log --pretty='format:  %h -> { %p }' \"$@\" | sed 's/[0-9a-f][0-9a-f]*/\"&\"/g'; echo '}'; }; f"
         grac = "!f() { TOPLEVEL=$(git rev-parse --show-toplevel); git grep --full-name -In \"$@\" -- '*.h' '*.cxx' | sed -e\"s?^?$TOPLEVEL/?\"; }; f"
         poh = push origin HEAD
-[core]
-	excludesfile = /home/tmoore/.global_gitignore
