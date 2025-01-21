@@ -8,9 +8,8 @@
 (require 'package)
 
 (load-file "~/.emacs.d/init.el")
+(defvar my-org-roam-dir "~/org-files/org-roam")
 (load-file "~/.emacs.d/org.el")
-(unless (eq system-type 'windows-nt)
-  (load-file "~/.emacs.d/lsp.el"))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -30,7 +29,8 @@
  '(package-selected-packages
    '(org-roam-ui julia-snail keyword-search vterm glsl-mode julia-mode json-mode org-ref org-roam deft htmlize org-plus-contrib helm use-package pdf-tools magit magic-latex-buffer diminish bind-key))
  '(safe-local-variable-values
-   '((Base . 10)
+   '((org-duration-format . h:mm)
+     (Base . 10)
      (Syntax . ANSI-Common-Lisp)
      (eval progn
            (c-set-offset 'innamespace '0)
@@ -47,7 +47,7 @@
      (Package . CLIM-DEFSYSTEM)
      (Package . CLIM-UTILS)
      (package . tk)
-     \.\.\.))
+     \...))
  '(tool-bar-mode nil)
  '(warning-suppress-log-types '((comp) (:warning))))
 (custom-set-faces
