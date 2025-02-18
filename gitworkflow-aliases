@@ -1,0 +1,151 @@
+[alias]
+	# Basically `log --oneline --decorate --graph` with different colors and some additional info (author and date)
+	lg = log --graph --abbrev-commit --decorate --format=format:'%C(yellow)%h%C(reset) %C(normal)%s%C(reset) %C(dim white)%an%C(reset) %C(dim blue)(%ar)%C(reset) %C(dim black)%d%C(reset)'
+
+	# lg (see above) with --first-parent
+	lgp = log --graph --abbrev-commit --decorate --format=format:'%C(yellow)%h%C(reset) %C(normal)%s%C(reset) %C(dim white)%an%C(reset) %C(dim blue)(%ar)%C(reset) %C(dim black)%d%C(reset)' --first-parent
+
+	# https://stackoverflow.com/questions/61510067/show-specific-commits-in-git-log-in-context-of-other-commits
+	hl = "!f() { cd -- ${GIT_PREFIX:-.}; grep --color -E \"$(git log --pretty=%h \"$@\" | tr '\n' '|')\" || true; }; f"
+	hlp = "!f() { cd -- ${GIT_PREFIX:-.}; less -R -p $(git log --pretty=%h \"$@\" | tr '\n' '|'); }; f"
+
+	showp = show --first-parent
+
+	# List every branch, local and remote, in order of most recent to oldest commit, showing the branch's last commit and some last commit meta-data
+	br = for-each-ref --sort=-committerdate refs/heads/ refs/remotes/origin/ --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))' -
+
+	m = merge --no-ff
+
+	# Like m/merge but automatically adds origin/ for remote branches, and makes the log message consistent with a local branch merge
+	mb = "!f() { : git merge; branch=\"$1\"; if [[ $branch != \"origin/*\" ]]; then branch=\"origin/$branch\"; fi; git merge --no-ff $branch -m \"Merge branch '$(echo $1 | sed -e 's|origin/||g')' into $(git symbolic-ref HEAD | sed -e 's|refs/heads/||g')\"; }; f"
+
+	# tomerge <branch> <regex> tells you which branches matching <regex> have not been merged into <branch> yet
+	tomerge = !sh -c 'git branch -r --no-merged ${2:-HEAD} | grep -Ev "HEAD" | grep -Ev \"(\\*|master|maint|next|proposed|demo-stable)\" | grep ${1:-.}' -
+
+	# show topics (branches) matching the ai/description format
+	topics = "!f() { git branch --sort=committerdate -r | sed -e 's|remotes/||g' -e 's|origin/||g' | grep -E \"[a-z][a-z]?[a-z]?/.*\" | cut -c3- | grep -v -E '^(archive|backup)/' | uniq | grep -v HEAD ; }; f"
+
+	ff = !sh -c 'branch=$(git symbolic-ref HEAD | cut -d '/' -f 3-) && git merge --ff-only origin/$branch' -
+	fap = fetch --all -p -t
+	diffp = "!f() { : diff; [ \"$GIT_PREFIX\" != \"\" ] && cd "$GIT_PREFIX"; git diff --color $@ | diff-so-fancy | less --tabs=2 --pattern='^(added|deleted|modified): ' -RFX; }; f"
+	poh = push origin HEAD
+	pouh = push origin -u HEAD
+	pouph = push origin -u +HEAD
+
+	# The oldest ancestor between an integration branch (by default, master) and a topic branch (by default HEAD)
+	# e.g. git oldest-ancestor master ai/topic
+	# See http://stackoverflow.com/a/4991675/430128
+	oldest-ancestor = !bash -c 'diff --old-line-format= --new-line-format= <(git rev-list --first-parent \"${1:-master}\") <(git rev-list --first-parent \"${2:-HEAD}\") | head -1' -
+
+	# branchx is relative to the second param (the current branch by default)
+	# use "topicx" for branches relative to a gitworkflows integration branch
+	branchlg = !sh -c \"git lg $(git oldest-ancestor $1 ${2:-HEAD})..$1\" -
+	branchlog = !sh -c \"git log $(git oldest-ancestor $1 ${2:-HEAD})..$1\" -
+	branchdiff = !sh -c \"git diff $(git oldest-ancestor $1 ${2:-HEAD})..$1\" -
+	branchstat = !sh -c \"git --no-pager diff --stat $(git oldest-ancestor $1 ${2:-HEAD})..$1\" -
+
+	# topiclg is always relative to the second param (or master by default), and always assumes origin for the topic (except if HEAD)
+	# branchx is more general (doesn't assume anything), but topicx is useful for gitworkflows
+	# If the base of the topic was `maint` instead of `master`, you need to specify `maint` as the second param
+	topiclg = !sh -c \"git lg $(git oldest-ancestor origin/$(echo $1 | sed -e 's|origin/||g') ${2:-master})..origin/$(echo $1 | sed -e 's|origin/||g')\" -
+	topiclgp = !sh -c \"git lgp $(git oldest-ancestor origin/$(echo $1 | sed -e 's|origin/||g') ${2:-master})..origin/$(echo $1 | sed -e 's|origin/||g')\" -
+	topiclog = !sh -c \"git log $(git oldest-ancestor origin/$(echo $1 | sed -e 's|origin/||g') ${2:-master})..origin/$(echo $1 | sed -e 's|origin/||g')\" -
+	topiclogp = !sh -c \"git log --first-parent $(git oldest-ancestor origin/$(echo $1 | sed -e 's|origin/||g') ${2:-master})..origin/$(echo $1 | sed -e 's|origin/||g')\" -
+	topicdiff = !sh -c \"git diff $(git oldest-ancestor origin/$(echo $1 | sed -e 's|origin/||g') ${2:-master})..origin/$(echo $1 | sed -e 's|origin/||g')\" -
+	topicstat = !sh -c \"git --no-pager diff --stat $(git oldest-ancestor origin/$(echo $1 | sed -e 's|origin/||g') ${2:-master})..origin/$(echo $1 | sed -e 's|origin/||g')\" -
+
+	# Same as topic... aliases above, but operates on local topics (or HEAD if no arg specified)
+	topicllg = !sh -c \"git lg $(git oldest-ancestor ${1:-HEAD} ${2:-master})..${1:-HEAD}\" -
+	topicllgp = !sh -c \"git lgp $(git oldest-ancestor ${1:-HEAD} ${2:-master})..${1:-HEAD}\" -
+	topicllog = !sh -c \"git log $(git oldest-ancestor ${1:-HEAD} ${2:-master})..${1:-HEAD}\" -
+	topicllogp = !sh -c \"git log --first-parent $(git oldest-ancestor ${1:-HEAD} ${2:-master})..${1:-HEAD}\" -
+	topicldiff = !sh -c \"git diff $(git oldest-ancestor ${1:-HEAD} ${2:-master})..${1:-HEAD}\" -
+	topiclstat = !sh -c \"git --no-pager diff --stat $(git oldest-ancestor ${1:-HEAD} ${2:-master})..${1:-HEAD}\" -
+
+	# These also work on integration branches
+	branchllg = topicllg
+	branchllgp = topicllgp
+	branchllog = topicllg
+	branchllogp = topicllgp
+	branchldiff = topicldiff
+	branchlstat = topiclstat
+
+	# Log of already merged topic -- pass the topic merge commit as a parameter, and the fork branch as a second param (master by default)
+	# If the base of the branch was `maint` instead of `master`, you need to specify `maint` as the second param
+	mergedtopiclg = !sh -c \"git lg $(git oldest-ancestor $1^2 ${2:-master})..$1^2\" -
+	# Similar to mergedtopiclg but shows only the merged revs for a particular merge, not the entire topic (for example, if the same topic
+	# is merged multiple times)
+	mergedrevs = !sh -c \"git lg $1^-\" -
+
+	# Topics merged into a topic
+	mergedtopicsintotopic = !sh -c \"git topiclgp $1 | grep Merge | sed -e 's/.*\\(SP-[0-9]*\\).*/\\1/g' | sort | uniq\" -
+
+	# Merged branches into a range
+	mergedinto = "!f() { git lgp $1 | sed -e \"s|.*'\\(.*\\)'.*|\\1|g\" -e \"s|origin/||g\" | awk '!x[$0]++' | tac ; }; f"
+
+	# gitworkflows addons for topic notes
+	# Push/fetch branchnotes
+	# git config --add remote.origin.push '+refs/notes/branchnote:refs/notes/branchnote'
+	# git config --add remote.origin.fetch '+refs/notes/branchnote:refs/notes/branchnote'
+	branchnote = notes --ref=branchnote append
+	branchnoterm = notes --ref=branchnote remove
+
+	# Status of all topic branches (what is their state, and any topic notes)
+	# - : proposed
+	# + : next
+	# * : maint
+	# = : master
+	# . : no integration branch
+	where = "!bash -c 'while read topic; do contains=$(git branch -r --contains origin/$topic); if grep -q origin/maint <(echo "$contains"); then echo "\\* $topic"; elif grep -q origin/master <(echo "$contains"); then echo "= $topic"; elif grep -q origin/next <(echo "$contains"); then echo "+ $topic"; elif grep -q origin/proposed <(echo "$contains"); then echo "- $topic"; else echo ". $topic"; fi; if git notes --ref=branchnote list origin/$topic &> /dev/null; then echo -e "\\\\x20\\\\x20$(git notes --ref=branchnote show origin/$topic)"; fi; done < <(git topics)'"
+
+	# Misc
+	find = log --color --source -S
+	ignore = update-index --skip-worktree
+	unignore = update-index --no-skip-worktree
+	ignored = !git ls-files -v | grep "^S " | cut -c3-
+	rmbranch = "!f(){ : branch git branch -d ${1}; git push origin --delete ${1}; };f"
+	patch = --no-pager diff --no-color
+	chlog = !sh -c 'git log $1...$2  --pretty=format:\"* %s [view commit](http://github.com/$3/$4/commit/%H) \"' -
+	rmb = "!f() { gitrmb \"$@\"; }; f"
+	stash-all = stash push --include-untracked
+	stash-index = "!f() { \
+		git stash push --quiet --keep-index -m \"temp for stash-index\" && \
+		git stash push \"$@\" && \
+		git stash pop --quiet stash@{1} && \
+		git stash show -p | git apply -R; }; f"
+	stash-working = "!f() { \
+		git commit --quiet --no-verify -m \"temp for stash-working\" && \
+		git stash push \"$@\" && \
+		git reset --quiet --soft HEAD~1; }; f"
+	undo = reset --soft HEAD^
+	new = !sh -c 'git lg $1@{1}..$1@{0} "$@"'
+	blameconflict = blame -L '/^<<<</,/^>>>>/'
+	check = !sh -c 'git --no-pager diff --check "$@"' {}
+
+	# The different cases are:
+	# - dirty tree and dirty index
+	# - dirty tree and clean index
+	# - clean tree and dirty index
+	#
+	# We have to consider separate cases because the 'git rebase
+	# --whitespace=fix' is not compatible with empty commits (adding
+	# '--keep-empty' makes Git not fix the whitespace :P).
+	fixws-global-tree-and-index = !"\
+		if (! git diff-files --quiet .) && \
+			 (! git diff-index --quiet --cached HEAD) ; then \
+			git commit -m FIXWS_SAVE_INDEX && \
+			git add -u :/ && \
+			git commit -m FIXWS_SAVE_TREE && \
+			git rebase --whitespace=fix HEAD~2 && \
+			git reset HEAD~ && \
+			git reset --soft HEAD~ ; \
+		elif (! git diff-files --quiet .) ; then \
+			git add -u :/ && \
+			git commit -m FIXWS_SAVE_TREE && \
+			git rebase --whitespace=fix HEAD~ && \
+			git reset HEAD~ ; \
+		elif (! git diff-index --quiet --cached HEAD) ; then \
+			git commit -m FIXWS_SAVE_INDEX && \
+			git rebase --whitespace=fix HEAD~ && \
+			git reset --soft HEAD~ ; \
+		fi"
