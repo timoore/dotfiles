@@ -1,7 +1,36 @@
 [merge]
-	conflictstyle = diff3
+	conflictstyle = zdiff3
 [color]
 	ui = true
+[column]
+        ui = auto
+[branch]
+        sort = -committerdate
+[tag]
+        sort = version:refname
+[init]
+        defaultBranch = main
+[diff]
+        algorithm = histogram
+        colorMoved = plain
+        mnemonicPrefix = true
+        renames = true
+[push]
+        default = simple
+        autoSetupRemote = true
+        followTags = true
+[fetch]
+        prune = true
+        pruneTags = true
+        all = true
+[help]
+        autocorrect = prompt
+[rerere]
+        enabled = true
+        autoupdate = true
+[core]
+        fsmonitor = true
+        untrackedCache = true        
 [alias]
         ls = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%C(cyan)\\ [%an]" --decorate
         ll = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%C(cyan)\\ [%an]" --decorate --numstat
