@@ -27,7 +27,7 @@
      ("gnu" . "http://elpa.gnu.org/packages/")
      ("org" . "http://orgmode.org/elpa/")))
  '(package-selected-packages
-   '(mu4e org-roam-ui julia-snail keyword-search vterm glsl-mode julia-mode json-mode org-ref org-roam deft htmlize org-plus-contrib helm use-package pdf-tools magit magic-latex-buffer diminish bind-key))
+   '(julia-vterm mu4e org-roam-ui julia-snail keyword-search vterm glsl-mode julia-mode json-mode org-ref org-roam deft htmlize org-plus-contrib helm use-package pdf-tools magit magic-latex-buffer diminish bind-key))
  '(safe-local-variable-values
    '((org-duration-format . h:mm)
      (Base . 10)
