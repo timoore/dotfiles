@@ -19,6 +19,7 @@
  '(ansi-color-names-vector
    ["#242424" "#e5786d" "#95e454" "#cae682" "#8ac6f2" "#333366" "#ccaa8f" "#f6f3e8"])
  '(calendar-date-style 'iso)
+ '(custom-enabled-themes '(tango))
  '(custom-safe-themes
    '("8db4b03b9ae654d4a57804286eb3e332725c84d7cdab38463cb6b97d5762ad26" "89cc8d0ddb02b9528fe5f9f07bbe575865ae0e3e5d822b1e85f23bf50056e00a" "60a65134827577812cab9974a7c368f8ad15746fb032ea4a39d0768eafb9e6e2" default))
  '(ecb-options-version "2.40")
@@ -27,7 +28,7 @@
      ("gnu" . "http://elpa.gnu.org/packages/")
      ("org" . "http://orgmode.org/elpa/")))
  '(package-selected-packages
-   '(julia-vterm mu4e org-roam-ui julia-snail keyword-search vterm glsl-mode julia-mode json-mode org-ref org-roam deft htmlize org-plus-contrib helm use-package pdf-tools magit magic-latex-buffer diminish bind-key))
+   '(company treesit-auto yaml-pro julia-vterm mu4e org-roam-ui julia-snail keyword-search vterm glsl-mode julia-mode json-mode org-ref org-roam deft htmlize org-plus-contrib helm use-package pdf-tools magit magic-latex-buffer diminish bind-key))
  '(safe-local-variable-values
    '((org-duration-format . h:mm)
      (Base . 10)
